@@ -20,40 +20,47 @@ def log_destination():
   logging.info(f"> uploading cached readings to Influxdb bucket: {config.influxdb_bucket}")
 
 def _prepare_payload(reading):
-  measurements = ",".join([f"{key}={val}"
-                           for key,val in reading["readings"].items()])
-  timestamp = create_timestamp(reading["timestamp"])
-  nickname = reading["nickname"]
-  return f"weather_sensor,device={reading['nickname']} {measurements} {timestamp}"
+  sensor_readings = []
+  for sensor, fields in reading['readings'].items():
+    measurements = ",".join([f"{field}={val}"
+                           for field,val in fields.items()
+                             ])
+    sensor_readings.append(f"{sensor},device={reading['nickname']},station=enviro_{reading['model']} {measurements} {create_timestamp(reading['timestamp'])}")
+  return "\n".join(sensor_readings)
 
-def upload_reading(reading):  
-  bucket = config.influxdb_bucket
-
+def _prepare_legacy_payload(reading):
   payload = ""
-  for key, value in reading["readings"].items():
-    if payload != "":
-      payload += "\n"
-    timestamp = reading["timestamp"]
+  timestamp = create_timestamp(reading['timestamp'])
+  nickname = reading["nickname"]
+  if isinstance(list(reading["readings"].values())[0], dict):
+    readings = {}
+    for sensor, sensor_readings in reading['readings'].items():
+      readings.update(sensor_readings)
+    reading["readings"] = readings
 
-    year = int(timestamp[0:4])
-    month = int(timestamp[5:7])
-    day = int(timestamp[8:10])
-    hour = int(timestamp[11:13])
-    minute = int(timestamp[14:16])
-    second = int(timestamp[17:19])
-    timestamp = time.mktime((year, month, day, hour, minute, second, 0, 0))
+  return "\n".join(
+    f"{key},device={nickname} value={value} {timestamp}"
+    for key, value in reading['readings'].items()
+   )
+  return payload
 
-    nickname = reading["nickname"]
-    payload += f"{key},device={nickname} value={value} {timestamp}"
-
-  influxdb_token = config.influxdb_token
+def upload_reading(reading, legacy=True):  
   headers = {
-    "Authorization": f"Token {influxdb_token}"
-  }
+    "Authorization": f"Token {config.influxdb_token}"
+    }
+  
+  if legacy:
+      payload = _prepare_legacy_payload(reading)
+  else:
+      payload = _prepare_payload(reading)
 
-  url = config.influxdb_url
-  org = config.influxdb_org
-  url += f"/api/v2/write?precision=s&org={url_encode(org)}&bucket={url_encode(bucket)}"
+  bucket = url_encode(config.influxdb_bucket)
+  org = url_encode(config.influxdb_org)
+  url = "/".join([
+    config.influxdb_url,
+    "api/v2",
+    f"write?precision=s&org={org}&bucket={bucket}"
+  ])
  
   try:
     # post reading data to http endpoint
@@ -64,7 +71,7 @@ def upload_reading(reading):
       return UPLOAD_SUCCESS
 
     logging.debug(f"  - upload issue ({result.status_code} {result.reason})")
-  except:
-    logging.debug(f"  - an exception occurred when uploading")
+  except Exception as e:
+    logging.debug(f" - an exception occurred when uploading: {e}")
 
   return UPLOAD_FAILED

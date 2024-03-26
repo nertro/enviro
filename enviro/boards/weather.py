@@ -1,4 +1,5 @@
 import time, math, os
+from ucollections import OrderedDict
 from breakout_bme280 import BreakoutBME280
 from breakout_ltr559 import BreakoutLTR559
 from machine import Pin, PWM
@@ -190,14 +191,21 @@ def get_sensor_readings(seconds_since_last, is_usb_power):
   ltr_data = ltr559.get_reading()
   rain, rain_per_second = rainfall(seconds_since_last)
 
-  from ucollections import OrderedDict
   return OrderedDict({
-    "temperature": round(bme280_data[0], 2),
-    "humidity": round(bme280_data[2], 2),
-    "pressure": round(bme280_data[1] / 100.0, 2),
-    "luminance": round(ltr_data[BreakoutLTR559.LUX], 2),
-    "wind_speed": wind_speed(),
-    "rain": rain,
-    "rain_per_second": rain_per_second,
-    "wind_direction": wind_direction()
+    "BME280": {
+      "temperature": round(bme280_data[0], 2),
+      "humidity": round(bme280_data[2], 2),
+      "pressure": round(bme280_data[1] / 100.0, 2)
+      },
+    "LTR559":{
+      "luminance": round(ltr_data[BreakoutLTR559.LUX], 2)
+      },
+    "wind_sensor": {
+      "wind_speed": wind_speed(),
+      "wind_direction": wind_direction()
+      },
+    "rain_sensor": {
+      "rain": rain,
+      "rain_per_second": rain_per_second
+      }
   })
