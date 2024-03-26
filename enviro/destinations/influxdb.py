@@ -20,11 +20,11 @@ def log_destination():
   logging.info(f"> uploading cached readings to Influxdb bucket: {config.influxdb_bucket}")
 
 def _prepare_payload(reading):
-  measurements = ", ".join([f"{key}={val}"
+  measurements = ",".join([f"{key}={val}"
                            for key,val in reading["readings"].items()])
   timestamp = create_timestamp(reading["timestamp"])
   nickname = reading["nickname"]
-  return f"weather_sensor, device={reading['nickname']} {measurements} {timestamp}"
+  return f"weather_sensor,device={reading['nickname']} {measurements} {timestamp}"
 
 def upload_reading(reading):  
   bucket = config.influxdb_bucket
