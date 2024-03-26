@@ -15,8 +15,8 @@ class TestInflux(unittest.TestCase):
             "readings":
             OrderedDict({
                 "temperature": 30.05,
-                "humidity": 50.40,
-                "pressure": 989.00,
+                "humidity": 50.42,
+                "pressure": 989.01,
                 "rain": 30
             }),
             "model":
@@ -24,7 +24,7 @@ class TestInflux(unittest.TestCase):
             "uid":
             uid()
         }
-        expected_result = f"weather_sensor,device=enviro temperature=30.05, humidity=50.40,pressure=989.00, rain=30 {timestamp(reading['timestamp'])}"
+        expected_result = f"weather_sensor, device=enviro temperature=30.05, humidity=50.42, pressure=989.01, rain=30 {timestamp(reading['timestamp'])}"
 
         self.assertEqual(_prepare_payload(reading), expected_result)
 
