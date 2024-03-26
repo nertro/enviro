@@ -1,5 +1,6 @@
 from enviro import logging
 from enviro.constants import UPLOAD_SUCCESS, UPLOAD_FAILED
+from enviro.helpers import timestamp as create_timestamp
 import urequests, time
 import config
 
@@ -19,23 +20,11 @@ def log_destination():
   logging.info(f"> uploading cached readings to Influxdb bucket: {config.influxdb_bucket}")
 
 def _prepare_payload(reading):
-  payload = ""
-  for key, value in reading["readings"].items():
-    if payload != "":
-      payload += "\n"
-    timestamp = reading["timestamp"]
-
-  year = int(timestamp[0:4])
-  month = int(timestamp[5:7])
-  day = int(timestamp[8:10])
-  hour = int(timestamp[11:13])
-  minute = int(timestamp[14:16])
-  second = int(timestamp[17:19])
-  timestamp = time.mktime((year, month, day, hour, minute, second, 0, 0))
-
+  measurements = ", ".join([f"{key}={val}"
+                           for key,val in reading["readings"].items()])
+  timestamp = create_timestamp(reading["timestamp"])
   nickname = reading["nickname"]
-  # return payload += f"{key},device={nickname} value={value} {timestamp}"
-  return payload
+  return f"weather_sensor, device={reading['nickname']} {measurements} {timestamp}"
 
 def upload_reading(reading):  
   bucket = config.influxdb_bucket
