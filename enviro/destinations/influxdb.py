@@ -18,9 +18,7 @@ def url_encode(t):
 def log_destination():
   logging.info(f"> uploading cached readings to Influxdb bucket: {config.influxdb_bucket}")
 
-def upload_reading(reading):  
-  bucket = config.influxdb_bucket
-
+def _prepare_payload(reading):
   payload = ""
   for key, value in reading["readings"].items():
     if payload != "":
@@ -36,7 +34,11 @@ def upload_reading(reading):
   timestamp = time.mktime((year, month, day, hour, minute, second, 0, 0))
 
   nickname = reading["nickname"]
-    # payload += f"{key},device={nickname} value={value} {timestamp}"
+  # return payload += f"{key},device={nickname} value={value} {timestamp}"
+  return payload
+
+def upload_reading(reading):  
+  bucket = config.influxdb_bucket
 
   influxdb_token = config.influxdb_token
   headers = {
