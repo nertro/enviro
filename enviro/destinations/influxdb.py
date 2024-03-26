@@ -27,16 +27,16 @@ def upload_reading(reading):
       payload += "\n"
     timestamp = reading["timestamp"]
 
-    year = int(timestamp[0:4])
-    month = int(timestamp[5:7])
-    day = int(timestamp[8:10])
-    hour = int(timestamp[11:13])
-    minute = int(timestamp[14:16])
-    second = int(timestamp[17:19])
-    timestamp = time.mktime((year, month, day, hour, minute, second, 0, 0))
+  year = int(timestamp[0:4])
+  month = int(timestamp[5:7])
+  day = int(timestamp[8:10])
+  hour = int(timestamp[11:13])
+  minute = int(timestamp[14:16])
+  second = int(timestamp[17:19])
+  timestamp = time.mktime((year, month, day, hour, minute, second, 0, 0))
 
-    nickname = reading["nickname"]
-    payload += f"{key},device={nickname} value={value} {timestamp}"
+  nickname = reading["nickname"]
+    # payload += f"{key},device={nickname} value={value} {timestamp}"
 
   influxdb_token = config.influxdb_token
   headers = {
